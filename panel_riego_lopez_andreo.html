@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel de Riego — López y Andreo Agrícola</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
   :root {
@@ -632,6 +633,7 @@ function nextM(){ cM++; if(cM>11){cM=0;cY++;} renderCal(); }
 // ── SUPABASE TIEMPO REAL ──────────────────────────────────────
 const SUPA_URL = 'https://hcbvxgxvpcfztztuagwq.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYnZ4Z3h2cGNmenR6dHVhZ3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzcwOTUsImV4cCI6MjA5MzU1MzA5NX0.tQwJgh_-odcws9sV-VB-e0CYTeyqpMoDGxUVuaSkJ4Y';
+const db = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 async function supa(tabla, filtros) {
   let url = SUPA_URL + '/rest/v1/' + tabla + '?';
@@ -947,31 +949,20 @@ async function guardarConfig(estacion_id, canal_id, canal_nombre, cabezal) {
   };
 
   try {
-    const resp = await fetch(
-      SUPA_URL + '/rest/v1/configuracion_canales',
-      {
-        method: 'POST',
-        headers: {
-          'apikey': SUPA_KEY,
-          'Authorization': 'Bearer ' + SUPA_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'resolution=merge-duplicates,return=minimal'
-        },
-        body: JSON.stringify(row)
-      }
-    );
+    const { error } = await db
+      .from('configuracion_canales')
+      .upsert(row, { onConflict: 'estacion_id,canal_id' });
 
-    if (resp.ok || resp.status === 201) {
+    if (error) {
+      console.error('Error Supabase:', error);
+      btn.textContent = '✗ Error';
+      btn.style.background = '#e24b4a';
+      setTimeout(() => { btn.textContent = 'Guardar'; btn.style.background = ''; }, 3000);
+    } else {
       btn.textContent = '✓ Guardado';
       btn.style.background = '#1d7a52';
       setTimeout(() => { btn.textContent = 'Guardar'; btn.style.background = ''; }, 2000);
       loadConfiguracion();
-    } else {
-      const err = await resp.text();
-      console.error('Error:', resp.status, err);
-      btn.textContent = '✗ Error ' + resp.status;
-      btn.style.background = '#e24b4a';
-      setTimeout(() => { btn.textContent = 'Guardar'; btn.style.background = ''; }, 3000);
     }
   } catch(e) {
     console.error('Excepcion:', e);
