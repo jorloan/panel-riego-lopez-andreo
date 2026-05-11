@@ -938,6 +938,7 @@ async function guardarConfig(estacion_id, canal_id, canal_nombre, cabezal) {
   const unidad = document.getElementById('unidad-'+key).value;
   const vmin = parseFloat(document.getElementById('min-'+key).value) || 0;
   const vmax = parseFloat(document.getElementById('max-'+key).value) || 10;
+  const btn = document.querySelector(`#row-${key} button`);
 
   const row = {
     estacion_id, canal_id, canal_nombre, tipo, unidad,
@@ -945,27 +946,48 @@ async function guardarConfig(estacion_id, canal_id, canal_nombre, cabezal) {
     actualizado_en: new Date().toISOString()
   };
 
-  const resp = await fetch(SUPA_URL + '/rest/v1/configuracion_canales?on_conflict=estacion_id,canal_id', {
-    method: 'POST',
-    headers: {
-      'apikey': SUPA_KEY,
-      'Authorization': 'Bearer ' + SUPA_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'resolution=merge-duplicates,return=minimal'
-    },
-    body: JSON.stringify(row)
-  });
+  // Primero intentamos UPDATE
+  let resp = await fetch(
+    SUPA_URL + '/rest/v1/configuracion_canales?estacion_id=eq.' + estacion_id + '&canal_id=eq.' + canal_id,
+    {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(row)
+    }
+  );
 
-  const btn = document.querySelector(`#row-${key} button`);
-  if (resp.ok || resp.status === 201) {
+  // Si no existía el registro (0 filas actualizadas), hacemos INSERT
+  const count = resp.headers.get('content-range');
+  if (resp.ok && count === '*/0') {
+    resp = await fetch(
+      SUPA_URL + '/rest/v1/configuracion_canales',
+      {
+        method: 'POST',
+        headers: {
+          'apikey': SUPA_KEY,
+          'Authorization': 'Bearer ' + SUPA_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(row)
+      }
+    );
+  }
+
+  if (resp.ok) {
     btn.textContent = '✓ Guardado';
     btn.style.background = '#1d7a52';
     setTimeout(() => { btn.textContent = 'Guardar'; btn.style.background = ''; }, 2000);
     loadConfiguracion();
   } else {
     const err = await resp.text();
-    console.error('Error guardando:', err);
-    btn.textContent = '✗ Error';
+    console.error('Error:', resp.status, err);
+    btn.textContent = '✗ Error ' + resp.status;
     btn.style.background = '#e24b4a';
     setTimeout(() => { btn.textContent = 'Guardar'; btn.style.background = ''; }, 3000);
   }
