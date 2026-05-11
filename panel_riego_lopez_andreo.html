@@ -947,23 +947,25 @@ async function guardarConfig(estacion_id, canal_id, canal_nombre, cabezal) {
   };
 
   // Primero intentamos UPDATE
+  const filtro = 'estacion_id=eq.' + encodeURIComponent(estacion_id) + '&canal_id=eq.' + canal_id;
   let resp = await fetch(
-    SUPA_URL + '/rest/v1/configuracion_canales?estacion_id=eq.' + estacion_id + '&canal_id=eq.' + canal_id,
+    SUPA_URL + '/rest/v1/configuracion_canales?' + filtro,
     {
       method: 'PATCH',
       headers: {
         'apikey': SUPA_KEY,
         'Authorization': 'Bearer ' + SUPA_KEY,
         'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
+        'Prefer': 'return=representation'
       },
       body: JSON.stringify(row)
     }
   );
 
-  // Si no existía el registro (0 filas actualizadas), hacemos INSERT
-  const count = resp.headers.get('content-range');
-  if (resp.ok && count === '*/0') {
+  let data = await resp.json();
+
+  // Si no actualizó nada hacemos INSERT
+  if (Array.isArray(data) && data.length === 0) {
     resp = await fetch(
       SUPA_URL + '/rest/v1/configuracion_canales',
       {
