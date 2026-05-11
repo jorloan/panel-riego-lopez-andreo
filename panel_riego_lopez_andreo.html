@@ -945,25 +945,30 @@ async function guardarConfig(estacion_id, canal_id, canal_nombre, cabezal) {
     actualizado_en: new Date().toISOString()
   };
 
-  await fetch(SUPA_URL + '/rest/v1/configuracion_canales', {
+  const resp = await fetch(SUPA_URL + '/rest/v1/configuracion_canales?on_conflict=estacion_id,canal_id', {
     method: 'POST',
     headers: {
       'apikey': SUPA_KEY,
       'Authorization': 'Bearer ' + SUPA_KEY,
       'Content-Type': 'application/json',
-      'Prefer': 'resolution=merge-duplicates'
+      'Prefer': 'resolution=merge-duplicates,return=minimal'
     },
     body: JSON.stringify(row)
   });
 
-  // Feedback visual
   const btn = document.querySelector(`#row-${key} button`);
-  btn.textContent = '✓ Guardado';
-  btn.style.background = '#1d7a52';
-  setTimeout(() => { btn.textContent = 'Guardar'; btn.style.background = ''; }, 2000);
-
-  // Recargar instrumentos
-  loadConfiguracion();
+  if (resp.ok || resp.status === 201) {
+    btn.textContent = '✓ Guardado';
+    btn.style.background = '#1d7a52';
+    setTimeout(() => { btn.textContent = 'Guardar'; btn.style.background = ''; }, 2000);
+    loadConfiguracion();
+  } else {
+    const err = await resp.text();
+    console.error('Error guardando:', err);
+    btn.textContent = '✗ Error';
+    btn.style.background = '#e24b4a';
+    setTimeout(() => { btn.textContent = 'Guardar'; btn.style.background = ''; }, 3000);
+  }
 }
 
 // Init
