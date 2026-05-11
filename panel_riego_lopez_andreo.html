@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel de Riego — López y Andreo Agrícola</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
   :root {
@@ -633,7 +632,6 @@ function nextM(){ cM++; if(cM>11){cM=0;cY++;} renderCal(); }
 // ── SUPABASE TIEMPO REAL ──────────────────────────────────────
 const SUPA_URL = 'https://hcbvxgxvpcfztztuagwq.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYnZ4Z3h2cGNmenR6dHVhZ3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzcwOTUsImV4cCI6MjA5MzU1MzA5NX0.tQwJgh_-odcws9sV-VB-e0CYTeyqpMoDGxUVuaSkJ4Y';
-const db = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 async function supa(tabla, filtros) {
   let url = SUPA_URL + '/rest/v1/' + tabla + '?';
@@ -949,7 +947,7 @@ async function guardarConfig(estacion_id, canal_id, canal_nombre, cabezal) {
   };
 
   try {
-    const { error } = await db
+    const { error } = await window.db
       .from('configuracion_canales')
       .upsert(row, { onConflict: 'estacion_id,canal_id' });
 
@@ -985,6 +983,15 @@ function nav(id, btn) {
   if (id === 'realtime') loadRealtime();
   if (id === 'configuracion') loadConfiguracion();
 }
-</script>
+
+// Init
+renderCal(); renderCabs(); renderEmb(); renderRegs();</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" onload="
+  window.db = supabase.createClient(
+    'https://hcbvxgxvpcfztztuagwq.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYnZ4Z3h2cGNmenR6dHVhZ3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzcwOTUsImV4cCI6MjA5MzU1MzA5NX0.tQwJgh_-odcws9sV-VB-e0CYTeyqpMoDGxUVuaSkJ4Y'
+  );
+  console.log('Supabase client listo');
+"></script>
 </body>
 </html>
