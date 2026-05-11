@@ -946,27 +946,8 @@ async function guardarConfig(estacion_id, canal_id, canal_nombre, cabezal) {
     actualizado_en: new Date().toISOString()
   };
 
-  // Primero intentamos UPDATE
-  const filtro = 'estacion_id=eq.' + encodeURIComponent(estacion_id) + '&canal_id=eq.' + canal_id;
-  let resp = await fetch(
-    SUPA_URL + '/rest/v1/configuracion_canales?' + filtro,
-    {
-      method: 'PATCH',
-      headers: {
-        'apikey': SUPA_KEY,
-        'Authorization': 'Bearer ' + SUPA_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify(row)
-    }
-  );
-
-  let data = await resp.json();
-
-  // Si no actualizó nada hacemos INSERT
-  if (Array.isArray(data) && data.length === 0) {
-    resp = await fetch(
+  try {
+    const resp = await fetch(
       SUPA_URL + '/rest/v1/configuracion_canales',
       {
         method: 'POST',
@@ -974,22 +955,27 @@ async function guardarConfig(estacion_id, canal_id, canal_nombre, cabezal) {
           'apikey': SUPA_KEY,
           'Authorization': 'Bearer ' + SUPA_KEY,
           'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
         },
         body: JSON.stringify(row)
       }
     );
-  }
 
-  if (resp.ok) {
-    btn.textContent = '✓ Guardado';
-    btn.style.background = '#1d7a52';
-    setTimeout(() => { btn.textContent = 'Guardar'; btn.style.background = ''; }, 2000);
-    loadConfiguracion();
-  } else {
-    const err = await resp.text();
-    console.error('Error:', resp.status, err);
-    btn.textContent = '✗ Error ' + resp.status;
+    if (resp.ok || resp.status === 201) {
+      btn.textContent = '✓ Guardado';
+      btn.style.background = '#1d7a52';
+      setTimeout(() => { btn.textContent = 'Guardar'; btn.style.background = ''; }, 2000);
+      loadConfiguracion();
+    } else {
+      const err = await resp.text();
+      console.error('Error:', resp.status, err);
+      btn.textContent = '✗ Error ' + resp.status;
+      btn.style.background = '#e24b4a';
+      setTimeout(() => { btn.textContent = 'Guardar'; btn.style.background = ''; }, 3000);
+    }
+  } catch(e) {
+    console.error('Excepcion:', e);
+    btn.textContent = '✗ Error';
     btn.style.background = '#e24b4a';
     setTimeout(() => { btn.textContent = 'Guardar'; btn.style.background = ''; }, 3000);
   }
