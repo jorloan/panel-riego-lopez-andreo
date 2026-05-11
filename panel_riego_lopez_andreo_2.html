@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Riego — López y Andreo Agrícola</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  :root {
+    --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0efe9;
+    --border: #e2e0d8; --border2: #ccc9be;
+    --text: #1a1917; --text2: #6b6860; --text3: #9b9890;
+    --green: #1d7a52; --green-bg: #e8f5ed; --green-light: #a8d9bc;
+    --amber: #a06010; --amber-bg: #fef3e2; --amber-light: #f0c060;
+    --red: #b03020; --red-bg: #fdecea; --red-light: #e08070;
+    --blue: #1a5fa0; --blue-bg: #e8f0fa; --blue-light: #80aad8;
+    --purple: #5040a0; --purple-bg: #eeecf8; --purple-light: #9088c8;
+    --orange: #b04020; --orange-bg: #faeee8; --orange-light: #d88860;
+    --teal: #0a6060; --teal-bg: #e4f2f2;
+    --r: 10px; --r2: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .layout { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 0; }
+  .logo { padding: 0 0.5rem 1.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+  .logo-name { font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+  .logo-sub { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: 'DM Mono', monospace; }
+  .nav-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 0.5rem; margin-bottom: 6px; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--r2); cursor: pointer; font-size: 13px; color: var(--text2); margin-bottom: 2px; border: none; background: transparent; width: 100%; text-align: left; transition: all 0.15s; }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--green-bg); color: var(--green); font-weight: 500; }
+  .nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7; }
+  .nav-item.active .nav-icon { opacity: 1; }
+  .sidebar-footer { margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 11px; color: var(--text3); padding-left: 0.5rem; }
+  .sidebar-footer strong { display: block; color: var(--text2); font-size: 12px; margin-bottom: 2px; }
+
+  /* Main */
+  .main { padding: 1.5rem 2rem; overflow-x: hidden; }
+  .page-header { margin-bottom: 1.5rem; }
+  .page-title { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+  .page-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Stats grid */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1rem 1.2rem; }
+  .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .stat-value { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1.25rem 1.5rem; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px; }
+  .card-title { font-size: 14px; font-weight: 600; }
+
+  /* Badge */
+  .badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500; display: inline-block; white-space: nowrap; }
+  .b-green { background: var(--green-bg); color: var(--green); }
+  .b-amber { background: var(--amber-bg); color: var(--amber); }
+  .b-red { background: var(--red-bg); color: var(--red); }
+  .b-blue { background: var(--blue-bg); color: var(--blue); }
+  .b-purple { background: var(--purple-bg); color: var(--purple); }
+  .b-orange { background: var(--orange-bg); color: var(--orange); }
+  .b-teal { background: var(--teal-bg); color: var(--teal); }
+  .b-gray { background: var(--surface2); color: var(--text2); }
+
+  /* Buttons */
+  .btn { padding: 7px 14px; border-radius: var(--r2); font-size: 12px; font-family: 'DM Sans', sans-serif; cursor: pointer; border: 1px solid var(--border2); background: var(--surface); color: var(--text); font-weight: 500; transition: all 0.15s; }
+  .btn:hover { background: var(--surface2); }
+  .btn-green { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-green:hover { background: #155c3d; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  /* Calendar */
+  .cal-wrap { overflow-x: auto; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(70px, 1fr)); gap: 2px; min-width: 500px; }
+  .cal-head { font-size: 11px; color: var(--text3); text-align: center; padding: 5px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .cal-day { min-height: 72px; border-radius: 6px; border: 1px solid var(--border); padding: 5px; background: var(--surface); position: relative; }
+  .cal-day.today { border-color: var(--green); border-width: 1.5px; }
+  .cal-day.other { background: var(--bg); }
+  .day-num { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 3px; font-family: 'DM Mono', monospace; }
+  .ev { font-size: 10px; padding: 2px 5px; border-radius: 3px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .li { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+  .ld { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* Progress */
+  .prog-wrap { margin-bottom: 14px; }
+  .prog-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; flex-wrap: wrap; gap: 4px; }
+  .prog-name { font-size: 13px; font-weight: 500; }
+  .prog-bar { height: 10px; border-radius: 5px; background: var(--surface2); overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; }
+  .pf-green { background: var(--green); }
+  .pf-amber { background: var(--amber-light); }
+  .pf-red { background: var(--red-light); }
+  .pf-blue { background: var(--blue-light); }
+  .prog-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--bg); }
+
+  /* Cabezal cards */
+  .cab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+  .cab-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1.2rem 1.4rem; box-shadow: var(--shadow); }
+  .cab-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .cab-dot { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+  .cab-name { font-size: 14px; font-weight: 600; flex: 1; }
+  .cab-ha { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+  .parcela-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; gap: 8px; }
+  .parcela-row:last-child { border-bottom: none; }
+  .parcela-name { color: var(--text2); flex: 1; line-height: 1.3; }
+  .parcela-ha { font-family: 'DM Mono', monospace; font-weight: 500; flex-shrink: 0; }
+  .pending-note { font-size: 11px; color: var(--text3); background: var(--bg); padding: 7px 10px; border-radius: 6px; margin-top: 10px; border-left: 3px solid var(--border2); }
+
+  /* Modal */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+  .overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--r); border: 1px solid var(--border); padding: 1.5rem; width: 90%; max-width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
+  .modal-title { font-size: 15px; font-weight: 600; }
+  .close-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text3); line-height: 1; padding: 2px; }
+  .close-btn:hover { color: var(--text); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 12px; color: var(--text2); font-weight: 500; }
+  .form-group input, .form-group select { padding: 8px 10px; font-size: 13px; font-family: 'DM Sans', sans-serif; border: 1px solid var(--border2); border-radius: var(--r2); background: var(--bg); color: var(--text); transition: border 0.15s; }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--green); }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.2rem; }
+
+  .empty-state { text-align: center; padding: 2.5rem; color: var(--text3); font-size: 13px; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="6" fill="#1d7a52"/>
+          <path d="M14 6c-4.4 0-8 3.6-8 8 0 2.5 1.2 4.8 3 6.2V22h10v-1.8c1.8-1.4 3-3.7 3-6.2 0-4.4-3.6-8-8-8z" fill="#fff" fill-opacity="0.2"/>
+          <path d="M14 8v8M10 12l4-4 4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div>
+          <div class="logo-name">López y Andreo</div>
+          <div class="logo-sub">Agrícola · 2026</div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-label">Principal</div>
+    <button class="nav-item active" onclick="nav('calendario',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>
+      Calendario
+    </button>
+    <button class="nav-item" onclick="nav('cabezales',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v2M8 11.5v2M2.5 8h2M11.5 8h2"/></svg>
+      Cabezales
+    </button>
+    <button class="nav-item" onclick="nav('embalses',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13c0-3 2-5 6-5s6 2 6 5"/><path d="M2 10c0-3 2-4 6-4s6 1 6 4"/><path d="M8 6V3M6 4l2-2 2 2"/></svg>
+      Embalses
+    </button>
+    <button class="nav-item" onclick="nav('realtime',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2" fill="currentColor"/><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v1M8 12.5v1M2.5 8h1M12.5 8h1"/></svg>
+      Tiempo real
+    </button>
+    <button class="nav-item" onclick="nav('registro',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M3 8h10M3 12h6"/></svg>
+      Registro
+    </button>
+    <div class="sidebar-footer">
+      <strong>Temporada activa</strong>
+      Mar 2026 — Ago 2026<br>
+      Melón + Uva de mesa
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- CALENDARIO -->
+    <div id="sec-calendario" class="section active">
+      <div class="page-header">
+        <div class="page-title">Calendario de riego</div>
+        <div class="page-sub">Vista unificada de todos los cabezales</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Superficie total</div><div class="stat-value">51,4 ha</div><div class="stat-sub">en producción</div></div>
+        <div class="stat"><div class="stat-label">Uva de mesa</div><div class="stat-value">43,2 ha</div><div class="stat-sub">variedades ITUM</div></div>
+        <div class="stat"><div class="stat-label">Melón</div><div class="stat-value">8,2 ha</div><div class="stat-sub">campaña en curso</div></div>
+        <div class="stat"><div class="stat-label">Cabezales</div><div class="stat-value">10</div><div class="stat-sub">activos esta temporada</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" id="cal-title">Abril 2026</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="prevM()">‹ Anterior</button>
+            <button class="btn btn-sm" onclick="nextM()">Siguiente ›</button>
+            <button class="btn btn-sm btn-green" onclick="openRiego()">+ Registrar riego</button>
+          </div>
+        </div>
+        <div class="legend" id="legend"></div>
+        <div class="cal-wrap"><div class="cal-grid" id="cal"></div></div>
+      </div>
+    </div>
+
+    <!-- CABEZALES -->
+    <div id="sec-cabezales" class="section">
+      <div class="page-header">
+        <div class="page-title">Cabezales de riego</div>
+        <div class="page-sub">10 cabezales · 39 parcelas identificadas desde Agroptima</div>
+      </div>
+      <div style="background:var(--amber-bg);border:1px solid var(--amber-light);border-radius:var(--r2);padding:10px 14px;font-size:12px;color:var(--amber);margin-bottom:1rem">
+        Agrupación estimada a partir del Excel de Agroptima. Confirma asignación de sectores, programador y plataforma en cada cabezal.
+      </div>
+      <div class="cab-grid" id="cabs"></div>
+    </div>
+
+    <!-- EMBALSES -->
+    <div id="sec-embalses" class="section">
+      <div class="page-header">
+        <div class="page-title">Embalses y depósitos</div>
+        <div class="page-sub">Estado de agua y abonado por cabezal</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Balsas / embalses</div><div class="stat-value">10</div><div class="stat-sub">uno por cabezal</div></div>
+        <div class="stat"><div class="stat-label">Con datos</div><div class="stat-value" id="stat-datos">0 / 10</div><div class="stat-sub">actualizados</div></div>
+        <div class="stat"><div class="stat-label">Nivel bajo (&lt;35%)</div><div class="stat-value" id="stat-alertas" style="color:var(--red)">0</div><div class="stat-sub">requieren atención</div></div>
+        <div class="stat"><div class="stat-label">Depósitos abonado</div><div class="stat-value">10</div><div class="stat-sub">pendiente definir</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Embalses y balsas de riego</span><button class="btn btn-sm btn-green" onclick="openEmbalse()">+ Actualizar nivel</button></div>
+        <div id="emb-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Depósitos de abonado / fertirrigación</span></div>
+        <div id="dep-list"></div>
+      </div>
+    </div>
+
+    <!-- REGISTRO -->
+    <div id="sec-registro" class="section">
+      <div class="page-header">
+        <div class="page-title">Historial de riegos</div>
+        <div class="page-sub">Todos los riegos registrados manualmente</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Registros</span><span id="reg-count" class="badge b-gray">0 entradas</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Cabezal</th><th>Sector</th><th>Hora inicio</th><th>Duración</th><th>Volumen</th></tr></thead>
+            <tbody id="reg-body"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="reg-empty">Sin registros todavía. Añade el primer riego desde el calendario.</div>
+      </div>
+    </div>
+
+    <!-- TIEMPO REAL -->
+    <div id="sec-realtime" class="section">
+      <div class="page-header">
+        <div class="page-title">Tiempo real</div>
+        <div class="page-sub">Datos en directo desde Zeus · actualización cada 5 minutos</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Sectores activos</div><div class="stat-value" id="rt-sectores-activos">—</div><div class="stat-sub">ahora mismo</div></div>
+        <div class="stat"><div class="stat-label">Estaciones online</div><div class="stat-value" id="rt-online">—</div><div class="stat-sub">última hora</div></div>
+        <div class="stat"><div class="stat-label">Alarmas activas</div><div class="stat-value" id="rt-alarmas" style="color:var(--red)">—</div><div class="stat-sub">sin restaurar</div></div>
+        <div class="stat"><div class="stat-label">Última sync</div><div class="stat-value" id="rt-sync" style="font-size:14px">—</div></div>
+      </div>
+
+      <!-- Sectores por cabezal -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Estado de sectores por cabezal</span><button class="btn btn-sm btn-green" onclick="loadRealtime()">↻ Actualizar</button></div>
+        <div id="rt-sectores-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px">
+          <div style="color:var(--text3);font-size:13px;padding:1rem">Cargando datos de Zeus...</div>
+        </div>
+      </div>
+
+      <!-- Depósitos abono -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Depósitos de abonado — datos Zeus</span></div>
+        <div id="rt-depositos"></div>
+      </div>
+
+      <!-- Presiones -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Presiones en tiempo real</span></div>
+        <div id="rt-presiones"></div>
+      </div>
+
+      <!-- Alarmas recientes -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Alarmas recientes</span></div>
+        <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Fecha</th><th>Cabezal</th><th>Tipo</th><th>Descripción</th></tr></thead>
+          <tbody id="rt-alarmas-tabla"></tbody>
+        </table>
+        </div>
+        <div class="empty-state" id="rt-alarmas-empty" style="display:none">Sin alarmas recientes.</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal riego -->
+<div class="overlay" id="mod-riego">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Registrar riego</span><button class="close-btn" onclick="closeM('mod-riego')">×</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>Cabezal</label><select id="f-cab" onchange="updateSectores()"></select></div>
+      <div class="form-group"><label>Sector</label><select id="f-sec"></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Fecha</label><input type="date" id="f-fecha"></div>
+      <div class="form-group"><label>Hora inicio</label><input type="time" id="f-hora" value="07:00"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Duración (min)</label><input type="number" id="f-dur" value="60" min="5"></div>
+      <div class="form-group"><label>Volumen estimado (m³)</label><input type="number" id="f-vol" value="15" min="0"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:0"><label>Notas</label><input type="text" id="f-notas" placeholder="Observaciones opcionales..."></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeM('mod-riego')">Cancelar</button>
+      <button class="btn btn-green" onclick="guardarRiego()">Guardar riego</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal embalse -->
+<div class="overlay" id="mod-emb">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Actualizar nivel de balsa</span><button class="close-btn" onclick="closeM('mod-emb')">×</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>Balsa / Embalse</label><select id="e-sel"></select></div>
+      <div class="form-group"><label>Nivel actual (%)</label><input type="number" id="e-niv" min="0" max="100" value="65"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Fecha lectura</label><input type="date" id="e-fecha"></div>
+      <div class="form-group"><label>Notas</label><input type="text" id="e-notas" placeholder="Opcional"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeM('mod-emb')">Cancelar</button>
+      <button class="btn btn-green" onclick="guardarEmbalse()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CABS = [
+  { id:'mirador', n:'MIRADOR', ha:4.52, color:'#378add', bc:'b-blue', sectores:28,
+    parcelas:[
+      {n:'MIRADOR 1 — ITUM FIVE Injertos tronco 2024',ha:0.71,c:'Itum Five'},
+      {n:'MIRADOR — Itum Five INJERTOS 2022',ha:1.31,c:'Itum Five'},
+      {n:'MIRADOR 2 — Itum Five — 5',ha:2.50,c:'Itum Five'}]},
+  { id:'fontanas', n:'FONTANAS', ha:11.01, color:'#1d7a52', bc:'b-green', sectores:13,
+    parcelas:[
+      {n:'FONTANAS Francisco',ha:1.24,c:'Melón'},
+      {n:'FONTANAS ITUM FIVE — Centro',ha:1.55,c:'Itum Five'},
+      {n:'FONTANAS ITUM TWELVE — Abajo',ha:1.73,c:'Itum Twelve'},
+      {n:'FONTANAS Itum Nine — 9',ha:0.98,c:'Itum Nine'},
+      {n:'FONTANAS ITUMTWENTY 2026',ha:2.10,c:'Itum Twenty'},
+      {n:'FONTANAS ITUM TWELVE — Abajo (2)',ha:1.73,c:'Itum Twelve'},
+      {n:'DEILOR Frente — viejete',ha:0.48,c:'Melón'},
+      {n:'Paco Pala — Socio Panzon',ha:0.90,c:'Melón'}]},
+  { id:'lomorica', n:'LOMO RICA', ha:3.83, color:'#b04020', bc:'b-orange', sectores:8,
+    parcelas:[
+      {n:'LOMO RICA Horma — Laurel 2025',ha:0.80,c:'Itum Five'},
+      {n:'LOMO RICA NUEVAS itumsixteen 2024',ha:0.73,c:'Itum Sixteen'},
+      {n:'LOMO DE LA RICA Superior 2016–2017',ha:2.20,c:'Superior'}]},
+  { id:'lancha', n:'LANCHA', ha:1.90, color:'#6040b0', bc:'b-purple', sectores:4,
+    parcelas:[
+      {n:'DOMINGO PÉREZ — lancha Horticolas (Galia)',ha:1.09,c:'Galia'},
+      {n:'DOMINGO PÉREZ — Lancha Rambla ITUM FOUR',ha:0.81,c:'Itum Four'}]},
+  { id:'guirao', n:'GUIRAO', ha:4.88, color:'#a06010', bc:'b-amber', sectores:6,
+    parcelas:[
+      {n:'GUIRAO INJERTOS junto vía tren',ha:0.40,c:'Itum Twelve'},
+      {n:'GUIRAO ITUMTWELVE Vía Servicio 2023',ha:0.50,c:'Itum Twelve'},
+      {n:'GUIRAO ITUMTWELVE carretera AVE 2021',ha:1.10,c:'Itum Twelve'},
+      {n:'GUIRAO ITUMFIVE Arriba MALLAS 2023',ha:1.35,c:'Itum Five'},
+      {n:'GUIRAO Arriba — ITUMSIXTEEN 2023',ha:0.72,c:'Itum Sixteen'}]},
+  { id:'camping', n:'CAMPING', ha:3.21, color:'#0a6060', bc:'b-teal', sectores:5,
+    parcelas:[
+      {n:'CAMPING VIA Superior',ha:0.64,c:'Superior'},
+      {n:'CAMPING Injertos FIVE',ha:2.57,c:'Itum Five'}]},
+  { id:'mercaero', n:'MERCAERO', ha:2.27, color:'#805000', bc:'b-amber', sectores:5,
+    parcelas:[
+      {n:'JOSE MERCADO',ha:2.27,c:'Melón'}]},
+  { id:'porches', n:'PORCHES', ha:3.47, color:'#1a5fa0', bc:'b-blue', sectores:8,
+    parcelas:[
+      {n:'PORCHES goteo',ha:3.47,c:'Melón'}]},
+  { id:'barquilla', n:'BARQUILLA', ha:0.93, color:'#c03080', bc:'b-purple', sectores:3,
+    parcelas:[
+      {n:'Barquilla Poveda Itum Five',ha:0.42,c:'Itum Five'},
+      {n:'Barquilla Poveda Itum Nine',ha:0.51,c:'Itum Nine'}]},
+  { id:'canal', n:'CANAL', ha:6.07, color:'#5040a0', bc:'b-purple', sectores:6,
+    parcelas:[
+      {n:'LA CANAL Abajo Injertos ITUM TWELVE',ha:0.97,c:'Itum Twelve'},
+      {n:'LA CANAL — MONTES Injertos ITUM TWELVE',ha:1.28,c:'Itum Twelve'},
+      {n:'LA CANAL ARRIBA Itum Twelve — 12',ha:1.97,c:'Itum Twelve'},
+      {n:'LA CANAL CENTRO — Superior',ha:1.85,c:'Superior'}]},
+];
+
+const EVS_BASE = [
+  {m:3,d:5,id:'fontanas'},{m:3,d:7,id:'mirador'},{m:3,d:9,id:'canal'},{m:3,d:10,id:'guirao'},
+  {m:3,d:12,id:'lomorica'},{m:3,d:14,id:'fontanas'},{m:3,d:14,id:'camping'},{m:3,d:16,id:'porches'},
+  {m:3,d:18,id:'lancha'},{m:3,d:19,id:'mirador'},{m:3,d:21,id:'canal'},{m:3,d:23,id:'guirao'},
+  {m:3,d:25,id:'fontanas'},{m:3,d:26,id:'lomorica'},{m:3,d:28,id:'mercaero'},{m:3,d:29,id:'porches'},
+  {m:3,d:30,id:'barquilla'}
+];
+
+const embalses = CABS.map(c => ({n:'Balsa '+c.n, cab:c.n, id:c.id, niv:null}));
+const deps = CABS.map(c => ({n:'Depósito '+c.n, cab:c.n, prod:'Pendiente definir', niv:null}));
+let regs = [];
+let cM = 3, cY = 2026;
+
+function gc(id){ return CABS.find(c=>c.id===id); }
+function nav(id, btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+function closeM(id){ document.getElementById(id).classList.remove('open'); }
+
+function renderCal(){
+  const MS=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('cal-title').textContent = MS[cM]+' '+cY;
+  const g = document.getElementById('cal'); g.innerHTML = '';
+  ['Lu','Ma','Mi','Ju','Vi','Sa','Do'].forEach(d=>{
+    const h=document.createElement('div'); h.className='cal-head'; h.textContent=d; g.appendChild(h);
+  });
+  const first=new Date(cY,cM,1), last=new Date(cY,cM+1,0);
+  const sd=(first.getDay()+6)%7;
+  for(let i=0;i<sd;i++){
+    const cell=document.createElement('div'); cell.className='cal-day other';
+    cell.innerHTML=`<div class="day-num">${new Date(cY,cM,-sd+i+1).getDate()}</div>`;
+    g.appendChild(cell);
+  }
+  const hoy=new Date();
+  for(let d=1;d<=last.getDate();d++){
+    const cell=document.createElement('div'); cell.className='cal-day';
+    if(d===hoy.getDate()&&cM===hoy.getMonth()&&cY===hoy.getFullYear()) cell.classList.add('today');
+    cell.innerHTML=`<div class="day-num">${String(d).padStart(2,'0')}</div>`;
+    const evs=[...EVS_BASE.filter(e=>e.m===cM&&e.d===d),...regs.filter(r=>r.dia===d&&r.mes===cM&&r.year===cY)];
+    evs.forEach(ev=>{
+      const cab=gc(ev.id||ev.cabId); if(!cab)return;
+      const s=document.createElement('div'); s.className='ev';
+      s.style.background=cab.color+'20'; s.style.color=cab.color;
+      s.textContent=cab.n.split(' ')[0]; cell.appendChild(s);
+    });
+    g.appendChild(cell);
+  }
+  document.getElementById('legend').innerHTML=CABS.map(c=>
+    `<div class="li"><div class="ld" style="background:${c.color}"></div>${c.n}</div>`
+  ).join('');
+}
+
+function renderCabs(){
+  document.getElementById('cabs').innerHTML=CABS.map(c=>`
+    <div class="cab-card">
+      <div class="cab-header">
+        <div class="cab-dot" style="background:${c.color}"></div>
+        <span class="cab-name">${c.n}</span>
+        <span class="badge ${c.bc}">${c.ha > 0 ? c.ha.toFixed(2)+' ha' : 'ha pendiente'}</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <span style="font-size:12px;background:var(--surface2);border-radius:20px;padding:3px 10px;color:var(--text2)">
+          <strong style="color:var(--text)">${c.sectores}</strong> sectores de riego
+        </span>
+        <span style="font-size:12px;background:var(--surface2);border-radius:20px;padding:3px 10px;color:var(--text2)">
+          ${c.parcelas.length} parcela${c.parcelas.length!==1?'s':''}
+        </span>
+      </div>
+      ${c.parcelas.map(p=>`<div class="parcela-row">
+        <span class="parcela-name">${p.n}</span>
+        <span class="badge b-gray" style="font-size:10px;margin-left:6px">${p.c}</span>
+        <span class="parcela-ha" style="margin-left:8px">${p.ha > 0 ? p.ha.toFixed(2)+' ha' : '—'}</span>
+      </div>`).join('')}
+      <div class="pending-note">Programador: pendiente &nbsp;·&nbsp; Plataforma: pendiente</div>
+    </div>`).join('');
+}
+
+function renderEmb(){
+  document.getElementById('e-sel').innerHTML = embalses.map(e=>`<option>${e.n}</option>`).join('');
+  document.getElementById('emb-list').innerHTML = embalses.map(e=>{
+    const cls = e.niv===null?'b-gray':e.niv>=60?'b-green':e.niv>=35?'b-amber':'b-red';
+    const txt = e.niv===null?'Sin datos':e.niv+'%';
+    const pfcls = e.niv===null?'':e.niv>=60?'pf-green':e.niv>=35?'pf-amber':'pf-red';
+    return `<div class="prog-wrap">
+      <div class="prog-label">
+        <span class="prog-name">${e.n}</span>
+        <span class="badge ${cls}">${txt}</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill ${pfcls}" style="width:${e.niv||0}%"></div></div>
+      <div class="prog-sub">${e.cab}</div>
+    </div><div class="divider"></div>`;
+  }).join('');
+  document.getElementById('dep-list').innerHTML = deps.map(d=>`<div class="prog-wrap">
+    <div class="prog-label">
+      <span class="prog-name">${d.n}</span>
+      <span style="font-size:11px;color:var(--text3)">${d.prod}</span>
+      <span class="badge b-gray">${d.niv===null?'Sin datos':d.niv+'%'}</span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${d.niv||0}%"></div></div>
+  </div><div class="divider"></div>`).join('');
+  const con = embalses.filter(e=>e.niv!==null).length;
+  document.getElementById('stat-datos').textContent = con+' / 10';
+  document.getElementById('stat-alertas').textContent = embalses.filter(e=>e.niv!==null&&e.niv<35).length;
+}
+
+function openRiego(){
+  document.getElementById('f-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('f-cab').innerHTML = CABS.map(c=>`<option value="${c.id}">${c.n}</option>`).join('');
+  updateSectores();
+  document.getElementById('mod-riego').classList.add('open');
+}
+function updateSectores(){
+  const cabId = document.getElementById('f-cab').value;
+  const cab = gc(cabId);
+  const n = cab ? cab.sectores : 4;
+  document.getElementById('f-sec').innerHTML = Array.from({length:n},(_,i)=>`<option>Sector ${i+1}</option>`).join('');
+}
+function openEmbalse(){
+  document.getElementById('e-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('mod-emb').classList.add('open');
+}
+
+function guardarRiego(){
+  const cabId = document.getElementById('f-cab').value;
+  const sec = document.getElementById('f-sec').value;
+  const fecha = document.getElementById('f-fecha').value;
+  if(!fecha) return;
+  const [y,m,d] = fecha.split('-').map(Number);
+  const cab = gc(cabId);
+  const hora = document.getElementById('f-hora').value;
+  const dur = document.getElementById('f-dur').value;
+  const vol = document.getElementById('f-vol').value;
+  const notas = document.getElementById('f-notas').value;
+  regs.unshift({cabId, cabN:cab.n, sec, dia:d, mes:m-1, year:y, hora, dur, vol, notas,
+    fs:`${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`});
+  renderRegs();
+  renderCal();
+  closeM('mod-riego');
+}
+
+function renderRegs(){
+  const empty = document.getElementById('reg-empty');
+  const body = document.getElementById('reg-body');
+  document.getElementById('reg-count').textContent = regs.length+' entradas';
+  if(regs.length===0){ empty.style.display='block'; body.innerHTML=''; return; }
+  empty.style.display='none';
+  body.innerHTML = regs.map(r=>`<tr>
+    <td style="color:var(--text2);font-family:'DM Mono',monospace;font-size:12px">${r.fs}</td>
+    <td style="font-weight:500">${r.cabN}</td>
+    <td><span class="badge b-gray">${r.sec}</span></td>
+    <td style="font-family:'DM Mono',monospace;font-size:12px">${r.hora}</td>
+    <td>${r.dur} min</td>
+    <td style="font-weight:500">${r.vol} m³</td>
+  </tr>`).join('');
+}
+
+function guardarEmbalse(){
+  const n = document.getElementById('e-sel').value;
+  const niv = parseInt(document.getElementById('e-niv').value);
+  if(isNaN(niv)||niv<0||niv>100) return;
+  const e = embalses.find(x=>x.n===n);
+  if(e){ e.niv=niv; renderEmb(); }
+  closeM('mod-emb');
+}
+
+function prevM(){ cM--; if(cM<0){cM=11;cY--;} renderCal(); }
+function nextM(){ cM++; if(cM>11){cM=0;cY++;} renderCal(); }
+
+// ── SUPABASE TIEMPO REAL ──────────────────────────────────────
+const SUPA_URL = 'https://hcbvxgxvpcfztztuagwq.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYnZ4Z3h2cGNmenR6dHVhZ3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzcwOTUsImV4cCI6MjA5MzU1MzA5NX0.tQwJgh_-odcws9sV-VB-e0CYTeyqpMoDGxUVuaSkJ4Y';
+
+async function supa(tabla, filtros) {
+  let url = SUPA_URL + '/rest/v1/' + tabla + '?';
+  if (filtros) url += filtros;
+  const r = await fetch(url, {
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json'
+    }
+  });
+  return await r.json();
+}
+
+function fmtFecha(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-ES') + ' ' + d.toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
+}
+
+async function loadRealtime() {
+  // Sectores activos
+  const sectores = await supa('sectores', 'order=cabezal.asc');
+  const estaciones = await supa('estaciones', 'order=cabezal.asc');
+  const valores = await supa('valores_actuales', '');
+  const alarmas = await supa('alarmas', 'order=fecha.desc&limit=20');
+
+  if (!Array.isArray(sectores)) return;
+
+  // Agrupar sectores por cabezal
+  const porCabezal = {};
+  sectores.forEach(s => {
+    if (!porCabezal[s.cabezal]) porCabezal[s.cabezal] = [];
+    porCabezal[s.cabezal].push(s);
+  });
+
+  const totalActivos = sectores.filter(s => s.activo).length;
+  document.getElementById('rt-sectores-activos').textContent = totalActivos;
+
+  // Online en última hora
+  const ahoraHace1h = new Date(Date.now() - 3600000).toISOString();
+  const online = estaciones.filter(e => e.ultima_conexion && e.ultima_conexion > ahoraHace1h).length;
+  document.getElementById('rt-online').textContent = online + ' / ' + estaciones.length;
+
+  // Última sync
+  const lastSync = sectores.reduce((max, s) => s.actualizado_en > max ? s.actualizado_en : max, '');
+  document.getElementById('rt-sync').textContent = fmtFecha(lastSync);
+
+  // Alarmas activas (razón 1=alto, 2=bajo, sin restaurar razón 3)
+  const alarmasActivas = Array.isArray(alarmas) ? alarmas.filter(a => a.razon !== 3).length : 0;
+  document.getElementById('rt-alarmas').textContent = alarmasActivas;
+
+  // Grid de sectores por cabezal
+  const grid = document.getElementById('rt-sectores-grid');
+  const colores = {
+    'FONTANAS':'#1d7a52','ELMIRADOR':'#378add','GUIRAO / CAMPING':'#a06010',
+    'LANCHA':'#6040b0','NOGUERA':'#0a6060','PORCHES':'#1a5fa0',
+    'BARQUILLA':'#c03080','FONTANAS VALVULAS':'#1d7a52'
+  };
+
+  // Última conexión por cabezal
+  const connPorCabezal = {};
+  estaciones.forEach(e => { connPorCabezal[e.cabezal] = e.ultima_conexion; });
+
+  grid.innerHTML = Object.entries(porCabezal).map(([cabezal, sects]) => {
+    const color = colores[cabezal] || '#888';
+    const activos = sects.filter(s => s.activo && s.canal_nombre);
+    const todos = sects.filter(s => s.canal_nombre);
+    const conn = fmtFecha(connPorCabezal[cabezal]);
+    const sectoresHtml = todos.map(s => `
+      <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:0.5px solid var(--border);font-size:12px">
+        <div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${s.activo ? '#1d7a52' : '#ccc'}"></div>
+        <span style="flex:1;color:${s.activo ? 'var(--text)' : 'var(--text3)'};font-weight:${s.activo ? '500' : '400'}">${s.canal_nombre || 'Canal ' + s.canal_id}</span>
+        ${s.activo ? '<span class="badge b-green" style="font-size:10px">ACTIVO</span>' : ''}
+      </div>`).join('');
+    return `
+      <div style="border:1px solid var(--border);border-radius:var(--r);padding:1rem;background:var(--surface)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:10px;height:10px;border-radius:2px;background:${color};flex-shrink:0"></div>
+          <span style="font-weight:600;font-size:13px;flex:1">${cabezal}</span>
+          <span class="badge ${activos.length > 0 ? 'b-green' : 'b-gray'}">${activos.length} activo${activos.length !== 1 ? 's' : ''}</span>
+        </div>
+        ${sectoresHtml || '<div style="font-size:12px;color:var(--text3)">Sin datos de sectores</div>'}
+        <div style="font-size:11px;color:var(--text3);margin-top:8px">Última conexión: ${conn}</div>
+      </div>`;
+  }).join('');
+
+  // Depósitos abono desde valores_actuales canal 114
+  const depositos = Array.isArray(valores) ? valores.filter(v => v.canal_id === 114) : [];
+  const depHtml = depositos.map(d => {
+    const pct = Math.min(100, Math.round(d.valor / 2000 * 100));
+    const cls = pct >= 50 ? 'pf-blue' : pct >= 25 ? 'pf-amber' : 'pf-red';
+    const bcls = pct >= 50 ? 'b-blue' : pct >= 25 ? 'b-amber' : 'b-red';
+    const est = estaciones.find(e => e.id === d.estacion_id);
+    const cab = est ? est.cabezal : d.estacion_id;
+    return `<div class="prog-wrap">
+      <div class="prog-label"><span class="prog-name">${cab}</span><span style="font-size:11px;color:var(--text3)">${d.canal_nombre}</span><span class="badge ${bcls}">${d.valor.toLocaleString()} L</span></div>
+      <div class="prog-bar"><div class="prog-fill ${cls}" style="width:${pct}%"></div></div>
+      <div class="prog-sub">Actualizado: ${fmtFecha(d.actualizado_en)}</div>
+    </div><div class="divider"></div>`;
+  }).join('');
+  document.getElementById('rt-depositos').innerHTML = depHtml || '<div style="font-size:13px;color:var(--text3);padding:1rem">Sin datos de depósitos.</div>';
+
+  // Presiones desde valores_actuales canales 0 y 1
+  const presiones = Array.isArray(valores) ? valores.filter(v => (v.canal_id === 0 || v.canal_id === 1) && v.canal_nombre && v.valor > 0) : [];
+  const presHtml = presiones.map(p => {
+    const est = estaciones.find(e => e.id === p.estacion_id);
+    const cab = est ? est.cabezal : p.estacion_id;
+    const pct = Math.min(100, Math.round(p.valor / 6 * 100));
+    const cls = p.valor >= 2 && p.valor <= 4 ? 'pf-green' : p.valor < 2 ? 'pf-red' : 'pf-amber';
+    return `<div class="prog-wrap">
+      <div class="prog-label"><span class="prog-name">${cab}</span><span style="font-size:11px;color:var(--text3)">${p.canal_nombre}</span><span class="badge b-gray">${p.valor.toFixed(2)} bar</span></div>
+      <div class="prog-bar"><div class="prog-fill ${cls}" style="width:${pct}%"></div></div>
+    </div><div class="divider"></div>`;
+  }).join('');
+  document.getElementById('rt-presiones').innerHTML = presHtml || '<div style="font-size:13px;color:var(--text3);padding:1rem">Sin datos de presión.</div>';
+
+  // Alarmas tabla
+  const tbody = document.getElementById('rt-alarmas-tabla');
+  const empty = document.getElementById('rt-alarmas-empty');
+  if (Array.isArray(alarmas) && alarmas.length > 0) {
+    empty.style.display = 'none';
+    tbody.innerHTML = alarmas.slice(0,10).map(a => {
+      const razonCls = a.razon === 3 ? 'b-green' : a.razon === 1 ? 'b-red' : 'b-amber';
+      const razonTxt = a.razon === 3 ? 'Restaurado' : a.razon === 1 ? 'Alto' : 'Bajo';
+      return `<tr>
+        <td style="color:var(--text2);font-size:12px;white-space:nowrap">${fmtFecha(a.fecha)}</td>
+        <td style="font-weight:500">${a.cabezal || a.estacion_id}</td>
+        <td><span class="badge ${razonCls}">${razonTxt}</span></td>
+        <td style="font-size:12px;color:var(--text2)">${a.texto}</td>
+      </tr>`;
+    }).join('');
+  } else {
+    empty.style.display = 'block';
+    tbody.innerHTML = '';
+  }
+}
+
+// Init
+renderCal(); renderCabs(); renderEmb(); renderRegs();
+
+// Cargar tiempo real al navegar a esa sección
+const _navOrig = nav;
+function nav(id, btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'realtime') loadRealtime();
+}
+</script>
+</body>
+</html>
